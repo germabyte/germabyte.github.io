@@ -55,14 +55,14 @@ var configs = (function () {
     }
   };
   Singleton.defaultOptions = {
-    general_help: "Below there's a list of commands that you can use.",
-    ls_help: "List information about the files and folders (the current directory by default).",
-    open_help: "Open FILE(s) content and print it to the standard output (screen).",
-    whoami_help: "Print the user name associated with the current effective user ID and more info.",
-    help_help: "Print this menu.",
-    clear_help: "Clear the terminal screen.",
-    reboot_help: "Reboot the system.",
-    internet_explorer_warning: "NOTE: I see you're using internet explorer, this website won't work properly.",
+    general_help: "Below you will find a list of commands with a brief explanation of what each command does:",
+    ls_help: "This command shows you all the available files and folders in the current directory.",
+    open_help: "Opens and displays the contents of a specified file. Usage: open <file> (replace <file> with the exact file name, e.g., 'about.txt').",
+    whoami_help: "Provides detailed information about your current profile and system, including username, host, operating system, browser, and screen resolution.",
+    help_help: "Displays this help text. Use this command any time you need a reminder of the available commands.",
+    clear_help: "Clears the terminal screen, removing all previous commands and outputs to provide a fresh view.",
+    reboot_help: "Restarts the system, reinitializing the terminal environment to its initial state.",
+    internet_explorer_warning: "NOTE: I see you're using Internet Explorer, this website won't work properly.",
     invalid_command_message: "<value>: command not found.",
     reboot_message: "Preparing to reboot...\n\n",
     permission_denied_message: "Unable to '<value>', permission denied.",
@@ -99,7 +99,7 @@ var files = (function () {
     }
   };
   Singleton.defaultOptions = {
-    "about.txt": "This website was made using only pure JavaScript with no extra libraries.\nI made it dynamic so anyone can use it, just download it from GitHub and change the config text according to your needs.\nIf you manage to find any bugs or security issues feel free to email me: luisbraganca@protonmail.com",
+    "about.txt": "Welcome to my website. This site is powered solely by pure JavaScript with no extra libraries and simulates a terminal interface to display content through simple commands.\n\nIf you are not familiar with command-line interfaces, here are some basic instructions:\n- Type 'help' to view a list of available commands.\n- Type 'ls' to list all accessible files.\n- To open a file, type 'open <filename>' (for example, 'open resume.txt').\n\nBegin with the 'help' command to guide you through using the site.",
     "contact.txt": "mail@example.com",
     "social_network_1.txt": "https://www.socialite.com/username/",
     "social_network_2.txt": "https://example.com/profile/9382/"
