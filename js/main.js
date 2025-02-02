@@ -43,6 +43,12 @@ style.innerHTML = `
     border: 2px solid #0f0;
     border-radius: 5px;
   }
+
+  a {
+    color: #00ffff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
 `;
 document.head.appendChild(style);
 
@@ -546,7 +552,7 @@ var main = (function () {
 
   TypeSimulator.prototype.type = function (text, callback) {
     if (isURL(text)) {
-      window.open(text);
+      text = '<a href="' + text + '" target="_blank">' + text + '</a>';
     }
     var i = 0;
     var output = this.output;
