@@ -55,10 +55,10 @@ var configs = (function () {
     }
   };
   Singleton.defaultOptions = {
-    general_help: "Below you will find a list of commands with a brief explanation of what each command does:",
+    general_help: "The following commands are available for use. Each command is followed by a brief description of its function.",
     ls_help: "This command shows you all the available files and folders in the current directory.",
     open_help: "Opens and displays the contents of a specified file. Usage: open <file> (replace <file> with the exact file name, e.g., 'about.txt').",
-    whoami_help: "Provides detailed information about your current profile and system, including username, host, operating system, browser, and screen resolution.",
+    whoami_help: "Provides detailed information about your current profile and system.",
     help_help: "Displays this help text. Use this command any time you need a reminder of the available commands.",
     clear_help: "Clears the terminal screen, removing all previous commands and outputs to provide a fresh view.",
     reboot_help: "Restarts the system, reinitializing the terminal environment to its initial state.",
@@ -99,10 +99,10 @@ var files = (function () {
     }
   };
   Singleton.defaultOptions = {
-    "about.txt": "Welcome to my website. This site is powered solely by pure JavaScript with no extra libraries and simulates a terminal interface to display content through simple commands.\n\nIf you are not familiar with command-line interfaces, here are some basic instructions:\n- Type 'help' to view a list of available commands.\n- Type 'ls' to list all accessible files.\n- To open a file, type 'open <filename>' (for example, 'open resume.txt').\n\nBegin with the 'help' command to guide you through using the site.",
-    "contact.txt": "mail@example.com",
-    "social_network_1.txt": "https://www.socialite.com/username/",
-    "social_network_2.txt": "https://example.com/profile/9382/"
+    "about.txt": "Welcome! This site uses a terminal-like interface for a unique experience. It's built entirely with JavaScript. For those new to terminals, type 'help' for a command list, 'ls' to see available files, and 'open [filename]' to view a file's contents (e.g., 'open contact.txt'). Enjoy exploring!",
+    "contact_information.txt": "Email: germ.riccio@gmail.com\n Phone number: (+39)3313815525",
+    "concordatofacile.txt": "With my background in both real estate and IT consulting, I noticed a recurring challenge in managing rent-controlled lease agreements in Naples and the Campania region. This led me to develop ConcordatoFacile, a cloud-based solution tailored for associations representing landlords and tenants. The aim is to simplify and improve the process of creating and managing these often-complex agreements.\n\nConcordatoFacile acts as a digital facilitator. It provides associations with access to robust, industry-standard digital tools without requiring them to have in-depth technical knowledge.\n\nHere's a summary of its functionality:\n\n*   Automation is a key focus: It handles calculations for rent based on local regulations and property specifics, generates required documents, and issues deadline reminders.\n*   Emphasis on usability: Associations can collect necessary information through straightforward online forms, and the system provides step-by-step guidance. It also supports digital lease signing.\n*   AI support for complex cases: For unique lease requirements, there is an integrated AI feature, referred to as 'Assistente', that assists in customizing the agreement while maintaining compliance.\n*   Prioritizing security: Sensitive data is not stored on ConcordatoFacile's servers. Instead, it leverages leading cloud providers known for high security standards, including data encryption and GDPR compliance.\n*   Efficiency and accuracy: The platform is designed to minimize manual work, reduce paperwork, and improve the speed and precision with which associations can assist their members.\n\nConcordatoFacile is intended as a practical tool for associations. I provide ongoing support and actively work to refine the system based on user feedback.\n\nThe objective of ConcordatoFacile is to help associations enhance their service delivery, improve operational efficiency, and adapt to evolving needs. It aims to streamline their work, allowing them to concentrate on their core mission of representing their members.\n\nIf you'd like to learn more, please visit: www.concordatofacile.it",
+    "cv.url": "https://raw.githubusercontent.com/germabyte/cv/main/output/cv.pdf"
   };
   return {
     getInstance: function (options) {
