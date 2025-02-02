@@ -1,5 +1,15 @@
 "use strict";
 
+// Immediately check if the user is on a mobile device.
+// If yes, display a warning and stop the rest of the script.
+if (/Mobi|Android/i.test(navigator.userAgent)) {
+  alert("This website won't work on mobile, ensure to visit this website from a desktop to visit it!");
+  // Replace the entire page content with a simple warning message.
+  document.write("<h2 style='text-align:center;margin-top:50px;'>This website won't work on mobile. Please use a desktop for the best experience!</h2>");
+  // Forcefully stop any further script execution.
+  throw new Error("Mobile device detected. Halting script execution.");
+}
+
 var configs = (function () {
   var instance;
   var Singleton = function (options) {
@@ -75,25 +85,6 @@ var files = (function () {
 var main = (function () {
 
   var isUsingIE = window.navigator.userAgent.indexOf("MSIE ") > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./);
-
-  // Added mobile-specific orientation enforcement function.
-  function enforceLandscape() {
-    // Only execute if a mobile device is detected.
-    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      if (window.innerHeight > window.innerWidth) {
-        // If in portrait, rotate the body to “simulate” landscape mode.
-        document.body.style.transform = "rotate(90deg)";
-        document.body.style.transformOrigin = "center center";
-        document.body.style.width = window.innerHeight + "px";
-        document.body.style.height = window.innerWidth + "px";
-      } else {
-        // Clear any transform when already in landscape.
-        document.body.style.transform = "";
-        document.body.style.width = "";
-        document.body.style.height = "";
-      }
-    }
-  }
 
   var scrollToBottom = function () {
     window.scrollTo(0, document.body.scrollHeight);
@@ -564,22 +555,7 @@ var main = (function () {
 
   return {
     listener: function () {
-      // Mobile-specific behavior:
-      if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        // Attempt to lock orientation using Screen Orientation API if supported.
-        if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('landscape').catch(function(err) {
-            console.log("Orientation lock failed: ", err);
-            enforceLandscape();
-          });
-        } else {
-          enforceLandscape();
-        }
-        // Ensure the enforceLandscape() function is also called on window resize.
-        window.addEventListener("resize", enforceLandscape);
-      }
-
-      var terminal = new Terminal(
+      new Terminal(
         document.getElementById("prompt"),
         document.getElementById("cmdline"),
         document.getElementById("output"),
@@ -589,20 +565,7 @@ var main = (function () {
         configs.getInstance().host,
         configs.getInstance().is_root,
         configs.getInstance().type_delay
-      );
-      terminal.init();
-
-      // On mobile, always keep the virtual keyboard open.
-      if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        // When the cmdline loses focus, immediately refocus it.
-        terminal.cmdLine.addEventListener("blur", function() {
-          setTimeout(function () {
-            terminal.focus();
-          }, 100);
-        });
-        // Also set initial focus.
-        terminal.focus();
-      }
+      ).init();
     }
   };
 })();
