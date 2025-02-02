@@ -76,6 +76,25 @@ var main = (function () {
 
   var isUsingIE = window.navigator.userAgent.indexOf("MSIE ") > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./);
 
+  // Added mobile-specific orientation enforcement function.
+  function enforceLandscape() {
+    // Only execute if a mobile device is detected.
+    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      if (window.innerHeight > window.innerWidth) {
+        // If in portrait, rotate the body to “simulate” landscape mode.
+        document.body.style.transform = "rotate(90deg)";
+        document.body.style.transformOrigin = "center center";
+        document.body.style.width = window.innerHeight + "px";
+        document.body.style.height = window.innerWidth + "px";
+      } else {
+        // Clear any transform when already in landscape.
+        document.body.style.transform = "";
+        document.body.style.width = "";
+        document.body.style.height = "";
+      }
+    }
+  }
+
   var scrollToBottom = function () {
     window.scrollTo(0, document.body.scrollHeight);
   };
@@ -545,7 +564,22 @@ var main = (function () {
 
   return {
     listener: function () {
-      new Terminal(
+      // Mobile-specific behavior:
+      if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // Attempt to lock orientation using Screen Orientation API if supported.
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(function(err) {
+            console.log("Orientation lock failed: ", err);
+            enforceLandscape();
+          });
+        } else {
+          enforceLandscape();
+        }
+        // Ensure the enforceLandscape() function is also called on window resize.
+        window.addEventListener("resize", enforceLandscape);
+      }
+
+      var terminal = new Terminal(
         document.getElementById("prompt"),
         document.getElementById("cmdline"),
         document.getElementById("output"),
@@ -555,38 +589,22 @@ var main = (function () {
         configs.getInstance().host,
         configs.getInstance().is_root,
         configs.getInstance().type_delay
-      ).init();
+      );
+      terminal.init();
+
+      // On mobile, always keep the virtual keyboard open.
+      if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // When the cmdline loses focus, immediately refocus it.
+        terminal.cmdLine.addEventListener("blur", function() {
+          setTimeout(function () {
+            terminal.focus();
+          }, 100);
+        });
+        // Also set initial focus.
+        terminal.focus();
+      }
     }
   };
 })();
 
-/* 
-  Below, we replace the original onload with a function that:
-    1. Checks if the device is mobile, attempts to focus on the input immediately 
-       (so the keyboard opens).
-    2. Tries to lock orientation to landscape if supported.
-*/
-function isMobileDevice() {
-  return /Mobi|Android|Touch|iPhone|iPad|iPod|BlackBerry|IEMobile|Silk/i.test(navigator.userAgent);
-}
-
-window.onload = function() {
-  if (isMobileDevice()) {
-    // Force landscape if supported:
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(function(err) {
-        console.warn("Orientation lock not supported or refused:", err);
-      });
-    }
-    // Attempt to focus on the command line input to bring up the keyboard:
-    setTimeout(function() {
-      var cmdLine = document.getElementById("cmdline");
-      if (cmdLine) {
-        cmdLine.setAttribute("autofocus", ""); 
-        cmdLine.focus();
-      }
-    }, 200);
-  }
-  // Proceed with the original listener:
-  main.listener();
-};
+window.onload = main.listener;
