@@ -2,53 +2,51 @@
 
 // Function to completely replace the page with the warning
 function showMobileWarning() {
-  // Clear the entire document content
-  document.documentElement.innerHTML = '';
+  // Remove all existing event listeners (a more targeted approach than window.stop())
+  window.addEventListener("DOMContentLoaded", function removeListeners() {
+    window.removeEventListener("DOMContentLoaded", removeListeners); // Remove self
 
-  // Prevent any further script execution or modification to the page
-  window.stop();
+    // Use a new body element to avoid interfering with existing listeners
+    const newBody = document.createElement("body");
 
-  // Create a new, blank HTML document
-  document.open();
-  document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Unsupported Device</title>
-        <style>
-          body {
-            background-color: #000;
-            color: #0f0;
-            font-family: monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-          }
-          .warning-container {
-            text-align: center;
-            padding: 20px;
-            border: 2px solid #0f0;
-            border-radius: 5px;
-          }
-          h2 {
-            margin: 0;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="warning-container">
-          <h2>This website is not optimized for mobile devices.</h2>
-          <p>Please access it using a desktop computer for the intended experience.</p>
-        </div>
-      </body>
-    </html>
-  `);
-  document.close();
+    // Set the content of the new body (the warning message)
+    newBody.innerHTML = `
+      <div class="warning-container">
+        <h2>This website is not optimized for mobile devices.</h2>
+        <p>Please access it using a desktop computer for the intended experience.</p>
+      </div>
+    `;
 
-  // Throw an error to further prevent any script execution
-  throw new Error("Mobile device detected. Halting script execution.");
+    // Style the new body
+    newBody.style.backgroundColor = "#000";
+    newBody.style.color = "#0f0";
+    newBody.style.fontFamily = "monospace";
+    newBody.style.display = "flex";
+    newBody.style.justifyContent = "center";
+    newBody.style.alignItems = "center";
+    newBody.style.height = "100vh";
+    newBody.style.margin = "0";
+
+    // Style the warning container
+    const warningContainer = newBody.querySelector(".warning-container");
+    warningContainer.style.textAlign = "center";
+    warningContainer.style.padding = "20px";
+    warningContainer.style.border = "2px solid #0f0";
+    warningContainer.style.borderRadius = "5px";
+
+    // Replace the old body with the new body
+    document.body.parentNode.replaceChild(newBody, document.body);
+
+    // Prevent any other scripts on the page from running
+    const scripts = document.querySelectorAll("script");
+    scripts.forEach(script => {
+      script.type = "text/plain"; // Change script type to prevent execution
+    });
+
+    // Prevent further script execution (alternative to window.stop())
+    window.stopImmediatePropagation = true; // For capturing phase
+    window.stopImmediatePropagation = true; // For bubbling phase
+  });
 }
 
 // Immediately check if the user is on a mobile device.
