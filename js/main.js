@@ -43,12 +43,6 @@ style.innerHTML = `
     border: 2px solid #0f0;
     border-radius: 5px;
   }
-
-  a {
-    color: #00ffff;
-    text-decoration: underline;
-    cursor: pointer;
-  }
 `;
 document.head.appendChild(style);
 
@@ -551,37 +545,71 @@ var main = (function () {
   };
 
   TypeSimulator.prototype.type = function (text, callback) {
-    if (isURL(text)) {
-      text = '<a href="' + text + '" target="_blank">' + text + '</a>';
-    }
-    var i = 0;
     var output = this.output;
     var timer = this.timer;
-    var skipped = false;
-    var skip = function () {
-      skipped = true;
-    }.bind(this);
-    document.addEventListener("dblclick", skip);
-    (function typer() {
-      if (i < text.length) {
-        var char = text.charAt(i);
-        var isNewLine = char === "\n";
-        output.innerHTML += isNewLine ? "<br/>" : char;
-        i++;
-        if (!skipped) {
-          setTimeout(typer, isNewLine ? timer * 2 : timer);
+    // If the text is a URL, simulate typing inside an anchor element
+    if (isURL(text)) {
+      var link = document.createElement("a");
+      link.href = text.startsWith("http") ? text : "http://" + text;
+      link.target = "_blank";
+      link.style.color = "#00ffff";
+      link.style.textDecoration = "underline";
+      output.appendChild(link);
+      
+      var i = 0;
+      var skipped = false;
+      var skip = function () {
+        skipped = true;
+      };
+      document.addEventListener("dblclick", skip);
+      (function typer() {
+        if (i < text.length) {
+          link.textContent += text.charAt(i);
+          i++;
+          if (!skipped) {
+            setTimeout(typer, timer);
+          } else {
+            link.textContent += text.substring(i);
+            document.removeEventListener("dblclick", skip);
+            if (callback) callback();
+          }
+          scrollToBottom();
         } else {
-          output.innerHTML += (text.substring(i).replace(/\n/g, "<br/>")) + "<br/>";
           document.removeEventListener("dblclick", skip);
+          output.innerHTML += "<br/>";
           if (callback) callback();
+          scrollToBottom();
         }
-      } else if (callback) {
-        output.innerHTML += "<br/>";
-        document.removeEventListener("dblclick", skip);
-        callback();
-      }
-      scrollToBottom();
-    })();
+      })();
+    } else {
+      var i = 0;
+      var skipped = false;
+      var skip = function () {
+        skipped = true;
+      };
+      document.addEventListener("dblclick", skip);
+      (function typer() {
+        if (i < text.length) {
+          var char = text.charAt(i);
+          var isNewLine = char === "\n";
+          output.innerHTML += isNewLine ? "<br/>" : char;
+          i++;
+          if (!skipped) {
+            setTimeout(typer, isNewLine ? timer * 2 : timer);
+          } else {
+            output.innerHTML += (text.substring(i).replace(/\n/g, "<br/>")) + "<br/>";
+            document.removeEventListener("dblclick", skip);
+            if (callback) callback();
+          }
+          scrollToBottom();
+        } else if (callback) {
+          output.innerHTML += "<br/>";
+          document.removeEventListener("dblclick", skip);
+          callback();
+          scrollToBottom();
+        }
+      })();
+    }
   };
 
   return {
