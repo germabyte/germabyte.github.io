@@ -2,11 +2,9 @@
 
 // Function to completely replace the page with the warning
 function showMobileWarning() {
-  // Remove all existing event listeners (a more targeted approach than window.stop())
-  window.addEventListener("DOMContentLoaded", function removeListeners() {
-    window.removeEventListener("DOMContentLoaded", removeListeners); // Remove self
-
-    // Use a new body element to avoid interfering with existing listeners
+  // Wait for the DOM to be fully loaded
+  window.addEventListener("DOMContentLoaded", () => {
+    // Create a new body element
     const newBody = document.createElement("body");
 
     // Set the content of the new body (the warning message)
@@ -17,35 +15,15 @@ function showMobileWarning() {
       </div>
     `;
 
-    // Style the new body
-    newBody.style.backgroundColor = "#000";
-    newBody.style.color = "#0f0";
-    newBody.style.fontFamily = "monospace";
-    newBody.style.display = "flex";
-    newBody.style.justifyContent = "center";
-    newBody.style.alignItems = "center";
-    newBody.style.height = "100vh";
-    newBody.style.margin = "0";
-
-    // Style the warning container
-    const warningContainer = newBody.querySelector(".warning-container");
-    warningContainer.style.textAlign = "center";
-    warningContainer.style.padding = "20px";
-    warningContainer.style.border = "2px solid #0f0";
-    warningContainer.style.borderRadius = "5px";
+    // Apply styles using a CSS class for better maintainability
+    newBody.classList.add("warning-body");
 
     // Replace the old body with the new body
-    document.body.parentNode.replaceChild(newBody, document.body);
+    document.documentElement.replaceChild(newBody, document.body);
 
-    // Prevent any other scripts on the page from running
+    // Prevent further script execution by removing script tags
     const scripts = document.querySelectorAll("script");
-    scripts.forEach(script => {
-      script.type = "text/plain"; // Change script type to prevent execution
-    });
-
-    // Prevent further script execution (alternative to window.stop())
-    window.stopImmediatePropagation = true; // For capturing phase
-    window.stopImmediatePropagation = true; // For bubbling phase
+    scripts.forEach(script => script.remove());
   });
 }
 
@@ -58,6 +36,30 @@ if (/Mobi|Android/i.test(navigator.userAgent)) {
 // (The rest of your code remains unchanged, as it will never be reached on mobile)
 
 // Rest of your code (configs, files, main) remains unchanged...
+
+// Add CSS styles for the warning page using a <style> tag in the head
+const style = document.createElement("style");
+style.innerHTML = `
+  .warning-body {
+    background-color: #000;
+    color: #0f0;
+    font-family: monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .warning-container {
+    text-align: center;
+    padding: 20px;
+    border: 2px solid #0f0;
+    border-radius: 5px;
+  }
+`;
+document.head.appendChild(style);
+
 var configs = (function () {
   var instance;
   var Singleton = function (options) {
