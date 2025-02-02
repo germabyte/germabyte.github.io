@@ -1,14 +1,45 @@
 "use strict";
 
 // Immediately check if the user is on a mobile device.
-// If yes, display a warning and stop the rest of the script.
 if (/Mobi|Android/i.test(navigator.userAgent)) {
-  // Replace the entire page content with a simple warning message.
-  document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;'>This website won't work on mobile. Please use a desktop for the best experience!</h2>";
-  // Prevent further script execution by not executing any code.
+  // Replace the entire page content with a styled warning message.
+  document.documentElement.innerHTML = `
+    <head>
+      <title>Unsupported Device</title>
+      <style>
+        body {
+          background-color: #000;
+          color: #0f0;
+          font-family: monospace;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+        }
+        .warning-container {
+          text-align: center;
+          padding: 20px;
+          border: 2px solid #0f0;
+          border-radius: 5px;
+        }
+        h2 {
+          margin: 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="warning-container">
+        <h2>This website is not optimized for mobile devices.</h2>
+        <p>Please access it using a desktop computer for the intended experience.</p>
+      </div>
+    </body>
+  `;
+  // Prevent further script execution.
   throw new Error("Mobile device detected. Halting script execution.");
 }
 
+// Rest of your code (configs, files, main) remains unchanged...
 var configs = (function () {
   var instance;
   var Singleton = function (options) {
