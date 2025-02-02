@@ -1,14 +1,11 @@
 "use strict";
 
 // Immediately check if the user is on a mobile device.
-// If yes, hide the sidenav (if it exists), display a warning, and stop the rest of the script.
+// If yes, display a warning and stop the rest of the script.
 if (/Mobi|Android/i.test(navigator.userAgent)) {
-  var sideNavEl = document.getElementById("sidenav");
-  if (sideNavEl) {
-    sideNavEl.style.display = "none";
-  }
-  alert("This website won't work on mobile, ensure to visit this website from a desktop to visit it!");
-  document.write("<h2 style='text-align:center;margin-top:50px;'>This website won't work on mobile. Please use a desktop for the best experience!</h2>");
+  // Replace the entire page content with a simple warning message.
+  document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;'>This website won't work on mobile. Please use a desktop for the best experience!</h2>";
+  // Prevent further script execution by not executing any code.
   throw new Error("Mobile device detected. Halting script execution.");
 }
 
@@ -28,9 +25,6 @@ var configs = (function () {
     help_help: "Print this menu.",
     clear_help: "Clear the terminal screen.",
     reboot_help: "Reboot the system.",
-    // Removed welcome and welcome_file_name:
-    // welcome_file_name: "welcome_message.txt",
-    // welcome: "Welcome to FTW (Fake Terminal Website)! :)\n[...rest of old welcome text removed for brevity...]",
     internet_explorer_warning: "NOTE: I see you're using internet explorer, this website won't work properly.",
     invalid_command_message: "<value>: command not found.",
     reboot_message: "Preparing to reboot...\n\n",
@@ -69,7 +63,6 @@ var files = (function () {
   };
   Singleton.defaultOptions = {
     "about.txt": "This website was made using only pure JavaScript with no extra libraries.\nI made it dynamic so anyone can use it, just download it from GitHub and change the config text according to your needs.\nIf you manage to find any bugs or security issues feel free to email me: luisbraganca@protonmail.com",
-    // Removed "getting_started.txt".
     "contact.txt": "mail@example.com",
     "social_network_1.txt": "https://www.socialite.com/username/",
     "social_network_2.txt": "https://example.com/profile/9382/"
@@ -308,10 +301,7 @@ var main = (function () {
       this.sidenav.appendChild(element);
       this.sidenavElements.push(element);
     }
-    var sidenavBtn = document.getElementById("sidenavBtn");
-    if (sidenavBtn) {
-      sidenavBtn.addEventListener("click", this.handleSidenav.bind(this));
-    }
+    document.getElementById("sidenavBtn").addEventListener("click", this.handleSidenav.bind(this));
   };
 
   Terminal.prototype.handleSidenav = function (event) {
@@ -319,23 +309,16 @@ var main = (function () {
       this.profilePic.style.opacity = 0;
       this.sidenavElements.forEach(Terminal.makeElementDisappear);
       this.sidenav.style.width = "50px";
-      var sidenavBtn = document.getElementById("sidenavBtn");
-      if (sidenavBtn) {
-        sidenavBtn.innerHTML = "☰";
-        sidenavBtn.blur();
-      }
+      document.getElementById("sidenavBtn").innerHTML = "☰";
       this.sidenavOpen = false;
     } else {
       this.sidenav.style.width = "300px";
       this.sidenavElements.forEach(Terminal.makeElementAppear);
-      var sidenavBtn = document.getElementById("sidenavBtn");
-      if (sidenavBtn) {
-        sidenavBtn.innerHTML = "×";
-        sidenavBtn.blur();
-      }
+      document.getElementById("sidenavBtn").innerHTML = "×";
       this.profilePic.style.opacity = 1;
       this.sidenavOpen = true;
     }
+    document.getElementById("sidenavBtn").blur();
     event.stopPropagation();
   };
 
@@ -390,10 +373,9 @@ var main = (function () {
     var result;
     if (cmdComponents.length <= 1) {
       result = configs.getInstance().usage + ": " + cmds.OPEN.value + " <" + configs.getInstance().file + ">";
-    } 
+    }
     else if (
       !cmdComponents[1] ||
-      // Removed check for "welcome_file_name"
       !files.getInstance().hasOwnProperty(cmdComponents[1])
     ) {
       result = configs.getInstance().file_not_found.replace(
@@ -401,14 +383,12 @@ var main = (function () {
         cmdComponents[1]
       );
     } else {
-      // Removed the condition that checks for "welcome_message.txt" 
       result = files.getInstance()[cmdComponents[1]];
     }
     this.type(result, this.unlock.bind(this));
   };
 
   Terminal.prototype.ls = function () {
-    // Removed listing of welcome_message.txt
     var result = "";
     for (var file in files.getInstance()) {
       result += file + "\n";
@@ -484,7 +464,6 @@ var main = (function () {
     this.output.textContent = "";
     this.prompt.textContent = "";
     if (this.typeSimulator) {
-      // Show about.txt content instead of welcome
       this.type(
         files.getInstance()["about.txt"] +
         (isUsingIE ? "\n" + configs.getInstance().internet_explorer_warning : ""),
