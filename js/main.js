@@ -2,6 +2,12 @@
 
 // Function to completely replace the page with the warning
 function showMobileWarning() {
+  // Clear the entire document content
+  document.documentElement.innerHTML = '';
+
+  // Prevent any further script execution or modification to the page
+  window.stop();
+
   // Create a new, blank HTML document
   document.open();
   document.write(`
@@ -41,7 +47,7 @@ function showMobileWarning() {
   `);
   document.close();
 
-  // Prevent further script execution
+  // Throw an error to further prevent any script execution
   throw new Error("Mobile device detected. Halting script execution.");
 }
 
@@ -49,6 +55,9 @@ function showMobileWarning() {
 if (/Mobi|Android/i.test(navigator.userAgent)) {
   showMobileWarning();
 }
+
+// ... rest of your code (configs, files, main) ...
+// (The rest of your code remains unchanged, as it will never be reached on mobile)
 
 // Rest of your code (configs, files, main) remains unchanged...
 var configs = (function () {
