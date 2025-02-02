@@ -99,10 +99,12 @@ var files = (function () {
     }
   };
   Singleton.defaultOptions = {
-    "about.txt": "Welcome! This site uses a terminal-like interface for a unique experience. It's built entirely with JavaScript. For those new to terminals, type 'help' for a command list, 'ls' to see available files, and 'open [filename]' to view a file's contents (e.g., 'open contact.txt'). Enjoy exploring!",
-    "contact.txt": "Email: germ.riccio@gmail.com\n Phone number: (+39)3313815525",
+    "intro.txt": "Welcome! This site uses a terminal-like interface for a unique experience. It's built entirely with JavaScript. For those new to terminals, type 'help' for a command list, 'ls' to see available files, and 'open [filename]' to view a file's contents (e.g., 'open contact.txt'). Enjoy exploring!",
+	"about_me.txt": "So, I'm the one who somehow turned hating chemistry titrations into a career in... well, not chemistry. High school me thought, 'Why do I have to draw these titration curves when Excel can do it for me?' Turns out, that bit of laziness was a gateway drug to automation and spreadsheets. After a detour through a sociology degree (don't ask, it's a long story), I ended up here, making things easier for folks who, like me, appreciate a good shortcut. Who knew dodging chemistry homework would lead to this?",
+    "cv.url": "https://raw.githubusercontent.com/germabyte/cv/main/output/cv.pdf",
     "concordatofacile.txt": "With my background in both real estate and IT consulting, I noticed a recurring challenge in managing rent-controlled lease agreements in Naples and the Campania region. This led me to develop ConcordatoFacile, a cloud-based solution tailored for associations representing landlords and tenants. The aim is to simplify and improve the process of creating and managing these often-complex agreements.\n\nConcordatoFacile acts as a digital facilitator. It provides associations with access to robust, industry-standard digital tools without requiring them to have in-depth technical knowledge.\n\nHere's a summary of its functionality:\n\n*   Automation is a key focus: It handles calculations for rent based on local regulations and property specifics, generates required documents, and issues deadline reminders.\n*   Emphasis on usability: Associations can collect necessary information through straightforward online forms, and the system provides step-by-step guidance. It also supports digital lease signing.\n*   AI support for complex cases: For unique lease requirements, there is an integrated AI feature, referred to as 'Assistente', that assists in customizing the agreement while maintaining compliance.\n*   Prioritizing security: Sensitive data is not stored on ConcordatoFacile's servers. Instead, it leverages leading cloud providers known for high security standards, including data encryption and GDPR compliance.\n*   Efficiency and accuracy: The platform is designed to minimize manual work, reduce paperwork, and improve the speed and precision with which associations can assist their members.\n\nConcordatoFacile is intended as a practical tool for associations. I provide ongoing support and actively work to refine the system based on user feedback.\n\nThe objective of ConcordatoFacile is to help associations enhance their service delivery, improve operational efficiency, and adapt to evolving needs. It aims to streamline their work, allowing them to concentrate on their core mission of representing their members.\n\nIf you'd like to learn more, please visit: www.concordatofacile.it",
-    "cv.url": "https://raw.githubusercontent.com/germabyte/cv/main/output/cv.pdf"
+	"contact.txt": "Email: germ.riccio@gmail.com\n Phone number: (+39)3313815525",
+	"acknowledgements.txt": "This website's terminal-like interface was inspired by and built upon the foundational work of Luis Bragança's project. Without his innovative approach and dedication to creating a unique web experience, this site wouldn't have been possible. You can find the original project here: https://github.com/luisbraganca/fake-terminal-website",
   };
   return {
     getInstance: function (options) {
@@ -499,7 +501,7 @@ var main = (function () {
     this.prompt.textContent = "";
     if (this.typeSimulator) {
       this.type(
-        files.getInstance()["about.txt"] +
+        files.getInstance()["intro.txt"] +
         (isUsingIE ? "\n" + configs.getInstance().internet_explorer_warning : ""),
         function () {
           this.unlock();
