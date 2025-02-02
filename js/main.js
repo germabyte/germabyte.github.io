@@ -1,42 +1,53 @@
 "use strict";
 
+// Function to completely replace the page with the warning
+function showMobileWarning() {
+  // Create a new, blank HTML document
+  document.open();
+  document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Unsupported Device</title>
+        <style>
+          body {
+            background-color: #000;
+            color: #0f0;
+            font-family: monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+          }
+          .warning-container {
+            text-align: center;
+            padding: 20px;
+            border: 2px solid #0f0;
+            border-radius: 5px;
+          }
+          h2 {
+            margin: 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="warning-container">
+          <h2>This website is not optimized for mobile devices.</h2>
+          <p>Please access it using a desktop computer for the intended experience.</p>
+        </div>
+      </body>
+    </html>
+  `);
+  document.close();
+
+  // Prevent further script execution
+  throw new Error("Mobile device detected. Halting script execution.");
+}
+
 // Immediately check if the user is on a mobile device.
 if (/Mobi|Android/i.test(navigator.userAgent)) {
-  // Replace the entire page content with a styled warning message.
-  document.documentElement.innerHTML = `
-    <head>
-      <title>Unsupported Device</title>
-      <style>
-        body {
-          background-color: #000;
-          color: #0f0;
-          font-family: monospace;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          margin: 0;
-        }
-        .warning-container {
-          text-align: center;
-          padding: 20px;
-          border: 2px solid #0f0;
-          border-radius: 5px;
-        }
-        h2 {
-          margin: 0;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="warning-container">
-        <h2>This website is not optimized for mobile devices.</h2>
-        <p>Please access it using a desktop computer for the intended experience.</p>
-      </div>
-    </body>
-  `;
-  // Prevent further script execution.
-  throw new Error("Mobile device detected. Halting script execution.");
+  showMobileWarning();
 }
 
 // Rest of your code (configs, files, main) remains unchanged...
