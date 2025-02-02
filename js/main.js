@@ -148,63 +148,43 @@ var main = (function () {
 				return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip);
 			}
 
-			// Primary API (ipapi.co) - Request both IPv4 and IPv6
-			fetch('https://ipapi.co/json/')
+			// First, try to get the IPv4 address from ipify
+			fetch('https://api.ipify.org?format=json')
 				.then(response => {
 					if (response.ok) {
-						return response.json();
-					}
-					throw new Error('ipapi.co API request failed');
-				})
-				.then(data => {
-					if (isIPv4(data.ip)) {
-						resolve({
-							ip: data.ip,
-							city: data.city,
-							region: data.region,
-							country: data.country_name,
-							timezone: data.timezone
-						});
-					} else {
-						// If ipapi.co returns IPv6, try ipify for IPv4
-						return fetch('https://api.ipify.org?format=json');
-					}
-				})
-				.then(response => {
-					if (response && response.ok) {
 						return response.json();
 					}
 					throw new Error('ipify API request failed');
 				})
 				.then(data => {
 					if (data && isIPv4(data.ip)) {
-						// If ipify returns IPv4, fetch location from ipapi.co using this IPv4
-						return fetch('https://ipapi.co/' + data.ip + '/json/');
+						// If we have an IPv4, use ip-api.com to get location information
+						return fetch('http://ip-api.com/json/' + data.ip);
 					}
-					throw new Error('Could not retrieve IPv4 address');
+					throw new Error('Could not retrieve IPv4 address from ipify');
 				})
 				.then(response => {
-					if (response && response.ok) {
+					if (response.ok) {
 						return response.json();
 					}
-					throw new Error('Location fetch for IPv4 failed');
+					throw new Error('ip-api.com API request failed');
 				})
 				.then(data => {
-					if (data) {
+					if (data && data.status === 'success') {
 						resolve({
-							ip: data.ip, // This will be IPv4
+							ip: data.query, // This is the IPv4 address
 							city: data.city,
-							region: data.region,
-							country: data.country_name,
+							region: data.regionName,
+							country: data.country,
 							timezone: data.timezone
 						});
 					} else {
-						throw new Error('Could not retrieve IP information');
+						throw new Error('Could not retrieve location information from ip-api.com');
 					}
 				})
-				.catch(error1 => {
-					console.error(error1);
-					// Secondary API (ipinfo.io)
+				.catch(error => {
+					console.error(error);
+					// Fallback to ipinfo.io
 					fetch('https://ipinfo.io/json')
 						.then(response => {
 							if (response.ok) {
