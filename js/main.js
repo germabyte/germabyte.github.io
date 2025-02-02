@@ -141,73 +141,152 @@ var main = (function () {
     };
 
     // Enhanced IP information retrieval function
-    var fetchIPInfo = function() {
-        return new Promise(function(resolve, reject) {
-            // Primary API
-            fetch('https://ipapi.co/json/')
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error('ipapi.co API request failed');
-                })
-                .then(data => {
-                    resolve({
-                        ip: data.ip,
-                        city: data.city,
-                        region: data.region,
-                        country: data.country_name,
-                        timezone: data.timezone
-                    });
-                })
-                .catch(error1 => {
-                    console.error(error1);
-                    // Secondary API
-                    fetch('https://ipinfo.io/json')
-                        .then(response => {
-                            if (response.ok) {
-                                return response.json();
-                            }
-                            throw new Error('ipinfo.io API request failed');
-                        })
-                        .then(data => {
-                            resolve({
-                                ip: data.ip,
-                                city: data.city,
-                                region: data.region,
-                                country: data.country,
-                                timezone: data.timezone
-                            });
-                        })
-                        .catch(error2 => {
-                            console.error(error2);
-                            // JSONP fallback
-                            var script = document.createElement('script');
-                            script.src = 'https://freeipapi.com/api/json?callback=handleIPData';
+	var fetchIPInfo = function() {
+		return new Promise(function(resolve, reject) {
+			// Helper function to check if an IP address is IPv4
+			function isIPv4(ip) {
+				return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip);
+			}
 
-                            window.handleIPData = function(data) {
-                                resolve({
-                                    ip: data.ipAddress,
-                                    city: data.cityName,
-                                    region: data.regionName,
-                                    country: data.countryName,
-                                    timezone: data.timeZone
-                                });
-                                document.body.removeChild(script);
-                                delete window.handleIPData;
-                            };
+			// Primary API (ipapi.co) - Request both IPv4 and IPv6
+			fetch('https://ipapi.co/json/')
+				.then(response => {
+					if (response.ok) {
+						return response.json();
+					}
+					throw new Error('ipapi.co API request failed');
+				})
+				.then(data => {
+					if (isIPv4(data.ip)) {
+						resolve({
+							ip: data.ip,
+							city: data.city,
+							region: data.region,
+							country: data.country_name,
+							timezone: data.timezone
+						});
+					} else {
+						// If ipapi.co returns IPv6, try ipify for IPv4
+						return fetch('https://api.ipify.org?format=json');
+					}
+				})
+				.then(response => {
+					if (response && response.ok) {
+						return response.json();
+					}
+					throw new Error('ipify API request failed');
+				})
+				.then(data => {
+					if (data && isIPv4(data.ip)) {
+						// If ipify returns IPv4, fetch location from ipapi.co using this IPv4
+						return fetch('https://ipapi.co/' + data.ip + '/json/');
+					}
+					throw new Error('Could not retrieve IPv4 address');
+				})
+				.then(response => {
+					if (response && response.ok) {
+						return response.json();
+					}
+					throw new Error('Location fetch for IPv4 failed');
+				})
+				.then(data => {
+					if (data) {
+						resolve({
+							ip: data.ip, // This will be IPv4
+							city: data.city,
+							region: data.region,
+							country: data.country_name,
+							timezone: data.timezone
+						});
+					} else {
+						throw new Error('Could not retrieve IP information');
+					}
+				})
+				.catch(error1 => {
+					console.error(error1);
+					// Secondary API (ipinfo.io)
+					fetch('https://ipinfo.io/json')
+						.then(response => {
+							if (response.ok) {
+								return response.json();
+							}
+							throw new Error('ipinfo.io API request failed');
+						})
+						.then(data => {
+							if (isIPv4(data.ip)) {
+								resolve({
+									ip: data.ip,
+									city: data.city,
+									region: data.region,
+									country: data.country,
+									timezone: data.timezone
+								});
+							} else {
+								// If ipinfo.io returns IPv6, try ipify for IPv4
+								return fetch('https://api.ipify.org?format=json');
+							}
+						})
+						.then(response => {
+							if (response && response.ok) {
+								return response.json();
+							}
+							throw new Error('ipify API request failed');
+						})
+						.then(data => {
+							if (data && isIPv4(data.ip)) {
+								// If ipify returns IPv4, fetch location from ipinfo.io using this IPv4
+								return fetch('https://ipinfo.io/' + data.ip + '/json');
+							}
+							throw new Error('Could not retrieve IPv4 address');
+						})
+						.then(response => {
+							if (response && response.ok) {
+								return response.json();
+							}
+							throw new Error('Location fetch for IPv4 failed');
+						})
+						.then(data => {
+							if (data) {
+								resolve({
+									ip: data.ip, // This will be IPv4
+									city: data.city,
+									region: data.region,
+									country: data.country,
+									timezone: data.timezone
+								});
+							} else {
+								throw new Error('Could not retrieve IP information');
+							}
+						})
+						.catch(error2 => {
+							console.error(error2);
+							// JSONP fallback (freeipapi.com)
+							var script = document.createElement('script');
+							script.src = 'https://freeipapi.com/api/json?callback=handleIPData';
 
-                            script.onerror = function() {
-                                reject(new Error('All IP retrieval methods failed'));
-                                document.body.removeChild(script);
-                                delete window.handleIPData;
-                            };
+							window.handleIPData = function(data) {
+								resolve({
+									ip: isIPv4(data.ipAddress) ? data.ipAddress : 'Fallback IP not available',
+									city: data.cityName,
+									region: data.regionName,
+									country: data.countryName,
+									timezone: data.timeZone
+								});
+								document.body.removeChild(script);
+								delete window.handleIPData;
+							};
 
-                            document.body.appendChild(script);
-                        });
-                });
-        });
-    };
+							script.onerror = function() {
+								reject(new Error('All IP retrieval methods failed'));
+								document.body.removeChild(script);
+								delete window.handleIPData;
+							};
+
+							document.body.appendChild(script);
+						});
+				});
+		});
+	};
 
     
     /**
