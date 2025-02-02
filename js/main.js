@@ -1,12 +1,14 @@
 "use strict";
 
 // Immediately check if the user is on a mobile device.
-// If yes, display a warning and stop the rest of the script.
+// If yes, hide the sidenav (if it exists), display a warning, and stop the rest of the script.
 if (/Mobi|Android/i.test(navigator.userAgent)) {
+  var sideNavEl = document.getElementById("sidenav");
+  if (sideNavEl) {
+    sideNavEl.style.display = "none";
+  }
   alert("This website won't work on mobile, ensure to visit this website from a desktop to visit it!");
-  // Replace the entire page content with a simple warning message.
   document.write("<h2 style='text-align:center;margin-top:50px;'>This website won't work on mobile. Please use a desktop for the best experience!</h2>");
-  // Forcefully stop any further script execution.
   throw new Error("Mobile device detected. Halting script execution.");
 }
 
@@ -306,7 +308,10 @@ var main = (function () {
       this.sidenav.appendChild(element);
       this.sidenavElements.push(element);
     }
-    document.getElementById("sidenavBtn").addEventListener("click", this.handleSidenav.bind(this));
+    var sidenavBtn = document.getElementById("sidenavBtn");
+    if (sidenavBtn) {
+      sidenavBtn.addEventListener("click", this.handleSidenav.bind(this));
+    }
   };
 
   Terminal.prototype.handleSidenav = function (event) {
@@ -314,16 +319,23 @@ var main = (function () {
       this.profilePic.style.opacity = 0;
       this.sidenavElements.forEach(Terminal.makeElementDisappear);
       this.sidenav.style.width = "50px";
-      document.getElementById("sidenavBtn").innerHTML = "☰";
+      var sidenavBtn = document.getElementById("sidenavBtn");
+      if (sidenavBtn) {
+        sidenavBtn.innerHTML = "☰";
+        sidenavBtn.blur();
+      }
       this.sidenavOpen = false;
     } else {
       this.sidenav.style.width = "300px";
       this.sidenavElements.forEach(Terminal.makeElementAppear);
-      document.getElementById("sidenavBtn").innerHTML = "×";
+      var sidenavBtn = document.getElementById("sidenavBtn");
+      if (sidenavBtn) {
+        sidenavBtn.innerHTML = "×";
+        sidenavBtn.blur();
+      }
       this.profilePic.style.opacity = 1;
       this.sidenavOpen = true;
     }
-    document.getElementById("sidenavBtn").blur();
     event.stopPropagation();
   };
 
