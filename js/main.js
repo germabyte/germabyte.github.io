@@ -1,13 +1,9 @@
 "use strict";
 
-// Function to completely replace the page with the warning
 function showMobileWarning() {
-  // Wait for the DOM to be fully loaded
   window.addEventListener("DOMContentLoaded", () => {
-    // Create a new body element
     const newBody = document.createElement("body");
 
-    // Set the content of the new body (the warning message)
     newBody.innerHTML = `
       <div class="warning-container">
         <h2>This website is not optimized for mobile devices.</h2>
@@ -15,29 +11,19 @@ function showMobileWarning() {
       </div>
     `;
 
-    // Apply styles using a CSS class for better maintainability
     newBody.classList.add("warning-body");
 
-    // Replace the old body with the new body
     document.documentElement.replaceChild(newBody, document.body);
 
-    // Prevent further script execution by removing script tags
     const scripts = document.querySelectorAll("script");
     scripts.forEach(script => script.remove());
   });
 }
 
-// Immediately check if the user is on a mobile device.
 if (/Mobi|Android/i.test(navigator.userAgent)) {
   showMobileWarning();
 }
 
-// ... rest of your code (configs, files, main) ...
-// (The rest of your code remains unchanged, as it will never be reached on mobile)
-
-// Rest of your code (configs, files, main) remains unchanged...
-
-// Add CSS styles for the warning page using a <style> tag in the head
 const style = document.createElement("style");
 style.innerHTML = `
   .warning-body {
@@ -478,15 +464,14 @@ var main = (function () {
     this.type(configs.getInstance().reboot_message, function () {
       var dots = ["/", "-", "\\", "|"];
       var dotIndex = 0;
-      var rebootMsg = "Rebooting"; // Shortened message
-      var rebootLine = null; // Reference to the reboot line
-      var countdown = 3; // Initial countdown value
+      var rebootMsg = "Rebooting";
+      var rebootLine = null;
+      var countdown = 3;
 
       var updateOutput = function (output, message, currentDot, count) {
-        // Check if the reboot line exists
         if (!rebootLine) {
           output.innerHTML += message + " in " + count + "s " + currentDot + "<br/>";
-          rebootLine = output.lastChild; // Get the reference to the <br> tag
+          rebootLine = output.lastChild;
         } else {
           rebootLine.previousSibling.textContent = message + " in " + count + "s " + currentDot;
         }
@@ -497,12 +482,10 @@ var main = (function () {
         updateOutput(this.output, rebootMsg, dots[dotIndex], countdown);
         dotIndex = (dotIndex + 1) % dots.length;
 
-        // Decrement countdown every second
         if (dotIndex === 0) {
           countdown--;
         }
 
-        // End reboot sequence when countdown reaches 0
         if (countdown < 0) {
           clearInterval(rebootInterval);
           this.reset();
