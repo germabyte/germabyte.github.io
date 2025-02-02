@@ -140,76 +140,75 @@ var main = (function () {
         return browser;
     };
 
+    // Enhanced IP information retrieval function
     var fetchIPInfo = function() {
         return new Promise(function(resolve, reject) {
-            var attempts = 0;
-
-            function tryFetch() {
-                var url = attempts === 0 ? 'https://ipapi.co/json/' : 'https://ipinfo.io/json';
-                fetch(url)
-                    .then(function(response) {
-                        if (response.ok) {
-                            return response.json();
-                        }
-                        throw new Error('Network response not OK');
-                    })
-                    .then(function(data) {
-                        var result;
-                        if (attempts === 0) {
-                            result = {
-                                ip: data.ip,
-                                city: data.city,
-                                region: data.region,
-                                country: data.country_name,
-                                timezone: data.timezone
-                            };
-                        } else {
-                            result = {
+            // Primary API
+            fetch('https://ipapi.co/json/')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('ipapi.co API request failed');
+                })
+                .then(data => {
+                    resolve({
+                        ip: data.ip,
+                        city: data.city,
+                        region: data.region,
+                        country: data.country_name,
+                        timezone: data.timezone
+                    });
+                })
+                .catch(error1 => {
+                    console.error(error1);
+                    // Secondary API
+                    fetch('https://ipinfo.io/json')
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            }
+                            throw new Error('ipinfo.io API request failed');
+                        })
+                        .then(data => {
+                            resolve({
                                 ip: data.ip,
                                 city: data.city,
                                 region: data.region,
                                 country: data.country,
                                 timezone: data.timezone
-                            };
-                        }
-                        resolve(result);
-                    })
-                    .catch(function(error) {
-                        attempts++;
-                        if (attempts < 2) {
-                            tryFetch();
-                        } else {
-                            var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-                            window[callbackName] = function(data) {
-                                delete window[callbackName];
-                                if (script.parentNode) {
-                                    script.parentNode.removeChild(script);
-                                }
-                                resolve({
-                                    ip: data.ip,
-                                    city: data.city,
-                                    region: data.region,
-                                    country: data.country_name || data.country,
-                                    timezone: data.timezone
-                                });
-                            };
+                            });
+                        })
+                        .catch(error2 => {
+                            console.error(error2);
+                            // JSONP fallback
                             var script = document.createElement('script');
-                            script.src = 'https://ipapi.co/json/?callback=' + callbackName;
-                            script.onerror = function() {
-                                delete window[callbackName];
-                                if (script.parentNode) {
-                                    script.parentNode.removeChild(script);
-                                }
-                                reject(new Error('Could not retrieve IP data'));
-                            };
-                            document.head.appendChild(script);
-                        }
-                    });
-            }
+                            script.src = 'https://freeipapi.com/api/json?callback=handleIPData';
 
-            tryFetch();
+                            window.handleIPData = function(data) {
+                                resolve({
+                                    ip: data.ipAddress,
+                                    city: data.cityName,
+                                    region: data.regionName,
+                                    country: data.countryName,
+                                    timezone: data.timeZone
+                                });
+                                document.body.removeChild(script);
+                                delete window.handleIPData;
+                            };
+
+                            script.onerror = function() {
+                                reject(new Error('All IP retrieval methods failed'));
+                                document.body.removeChild(script);
+                                delete window.handleIPData;
+                            };
+
+                            document.body.appendChild(script);
+                        });
+                });
         });
     };
+
     
     /**
      * Model
@@ -406,12 +405,12 @@ var main = (function () {
             this.profilePic.style.opacity = 0;
             this.sidenavElements.forEach(Terminal.makeElementDisappear);
             this.sidenav.style.width = "50px";
-            document.getElementById("sidenavBtn").innerHTML = "&#9776;";
+            document.getElementById("sidenavBtn").innerHTML = "☰";
             this.sidenavOpen = false;
         } else {
             this.sidenav.style.width = "300px";
             this.sidenavElements.forEach(Terminal.makeElementAppear);
-            document.getElementById("sidenavBtn").innerHTML = "&times;";
+            document.getElementById("sidenavBtn").innerHTML = "×";
             this.profilePic.style.opacity = 1;
             this.sidenavOpen = true;
         }
@@ -586,6 +585,7 @@ var main = (function () {
                 self.type(result, self.unlock.bind(self));
             })
             .catch(function(error) {
+                console.error("Error fetching IP info:", error);
                 var os = getOS();
                 var browser = getBrowser();
                 var screenRes = window.screen.width + 'x' + window.screen.height;
