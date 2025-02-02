@@ -140,134 +140,76 @@ var main = (function () {
         return browser;
     };
 
-    // Enhanced IP information retrieval function
-	var fetchIPInfo = function() {
-		return new Promise(function(resolve, reject) {
-			// Helper function to check if an IP address is IPv4
-			function isIPv4(ip) {
-				return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip);
-			}
+    var fetchIPInfo = function() {
+        return new Promise(function(resolve, reject) {
+            var attempts = 0;
 
-			// First, try to get the IPv4 address from ipify
-			fetch('https://api.ipify.org?format=json')
-				.then(response => {
-					if (response.ok) {
-						return response.json();
-					}
-					throw new Error('ipify API request failed');
-				})
-				.then(data => {
-					if (data && isIPv4(data.ip)) {
-						// If we have an IPv4, use ip-api.com to get location information
-						return fetch('http://ip-api.com/json/' + data.ip);
-					}
-					throw new Error('Could not retrieve IPv4 address from ipify');
-				})
-				.then(response => {
-					if (response.ok) {
-						return response.json();
-					}
-					throw new Error('ip-api.com API request failed');
-				})
-				.then(data => {
-					if (data && data.status === 'success') {
-						resolve({
-							ip: data.query, // This is the IPv4 address
-							city: data.city,
-							region: data.regionName,
-							country: data.country,
-							timezone: data.timezone
-						});
-					} else {
-						throw new Error('Could not retrieve location information from ip-api.com');
-					}
-				})
-				.catch(error => {
-					console.error(error);
-					// Fallback to ipinfo.io
-					fetch('https://ipinfo.io/json')
-						.then(response => {
-							if (response.ok) {
-								return response.json();
-							}
-							throw new Error('ipinfo.io API request failed');
-						})
-						.then(data => {
-							if (isIPv4(data.ip)) {
-								resolve({
-									ip: data.ip,
-									city: data.city,
-									region: data.region,
-									country: data.country,
-									timezone: data.timezone
-								});
-							} else {
-								// If ipinfo.io returns IPv6, try ipify for IPv4
-								return fetch('https://api.ipify.org?format=json');
-							}
-						})
-						.then(response => {
-							if (response && response.ok) {
-								return response.json();
-							}
-							throw new Error('ipify API request failed');
-						})
-						.then(data => {
-							if (data && isIPv4(data.ip)) {
-								// If ipify returns IPv4, fetch location from ipinfo.io using this IPv4
-								return fetch('https://ipinfo.io/' + data.ip + '/json');
-							}
-							throw new Error('Could not retrieve IPv4 address');
-						})
-						.then(response => {
-							if (response && response.ok) {
-								return response.json();
-							}
-							throw new Error('Location fetch for IPv4 failed');
-						})
-						.then(data => {
-							if (data) {
-								resolve({
-									ip: data.ip, // This will be IPv4
-									city: data.city,
-									region: data.region,
-									country: data.country,
-									timezone: data.timezone
-								});
-							} else {
-								throw new Error('Could not retrieve IP information');
-							}
-						})
-						.catch(error2 => {
-							console.error(error2);
-							// JSONP fallback (freeipapi.com)
-							var script = document.createElement('script');
-							script.src = 'https://freeipapi.com/api/json?callback=handleIPData';
+            function tryFetch() {
+                var url = attempts === 0 ? 'https://ipapi.co/json/' : 'https://ipinfo.io/json';
+                fetch(url)
+                    .then(function(response) {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Network response not OK');
+                    })
+                    .then(function(data) {
+                        var result;
+                        if (attempts === 0) {
+                            result = {
+                                ip: data.ip,
+                                city: data.city,
+                                region: data.region,
+                                country: data.country_name,
+                                timezone: data.timezone
+                            };
+                        } else {
+                            result = {
+                                ip: data.ip,
+                                city: data.city,
+                                region: data.region,
+                                country: data.country,
+                                timezone: data.timezone
+                            };
+                        }
+                        resolve(result);
+                    })
+                    .catch(function(error) {
+                        attempts++;
+                        if (attempts < 2) {
+                            tryFetch();
+                        } else {
+                            var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+                            window[callbackName] = function(data) {
+                                delete window[callbackName];
+                                if (script.parentNode) {
+                                    script.parentNode.removeChild(script);
+                                }
+                                resolve({
+                                    ip: data.ip,
+                                    city: data.city,
+                                    region: data.region,
+                                    country: data.country_name || data.country,
+                                    timezone: data.timezone
+                                });
+                            };
+                            var script = document.createElement('script');
+                            script.src = 'https://ipapi.co/json/?callback=' + callbackName;
+                            script.onerror = function() {
+                                delete window[callbackName];
+                                if (script.parentNode) {
+                                    script.parentNode.removeChild(script);
+                                }
+                                reject(new Error('Could not retrieve IP data'));
+                            };
+                            document.head.appendChild(script);
+                        }
+                    });
+            }
 
-							window.handleIPData = function(data) {
-								resolve({
-									ip: isIPv4(data.ipAddress) ? data.ipAddress : 'Fallback IP not available',
-									city: data.cityName,
-									region: data.regionName,
-									country: data.countryName,
-									timezone: data.timeZone
-								});
-								document.body.removeChild(script);
-								delete window.handleIPData;
-							};
-
-							script.onerror = function() {
-								reject(new Error('All IP retrieval methods failed'));
-								document.body.removeChild(script);
-								delete window.handleIPData;
-							};
-
-							document.body.appendChild(script);
-						});
-				});
-		});
-	};
-
+            tryFetch();
+        });
+    };
     
     /**
      * Model
@@ -464,12 +406,12 @@ var main = (function () {
             this.profilePic.style.opacity = 0;
             this.sidenavElements.forEach(Terminal.makeElementDisappear);
             this.sidenav.style.width = "50px";
-            document.getElementById("sidenavBtn").innerHTML = "☰";
+            document.getElementById("sidenavBtn").innerHTML = "&#9776;";
             this.sidenavOpen = false;
         } else {
             this.sidenav.style.width = "300px";
             this.sidenavElements.forEach(Terminal.makeElementAppear);
-            document.getElementById("sidenavBtn").innerHTML = "×";
+            document.getElementById("sidenavBtn").innerHTML = "&times;";
             this.profilePic.style.opacity = 1;
             this.sidenavOpen = true;
         }
@@ -644,7 +586,6 @@ var main = (function () {
                 self.type(result, self.unlock.bind(self));
             })
             .catch(function(error) {
-                console.error("Error fetching IP info:", error);
                 var os = getOS();
                 var browser = getBrowser();
                 var screenRes = window.screen.width + 'x' + window.screen.height;
