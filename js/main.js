@@ -106,7 +106,7 @@ var files = (function () {
 	"github.url": "https://github.com/germabyte",
 	"linkedin.url": "https://www.linkedin.com/in/germriccio/",
 	"contact.txt": "Email: germ.riccio@gmail.com\n Phone number: (+39)3313815525",
-	"acknowledgements.txt": "This website's terminal-like interface was inspired by and built upon the foundational work of Luis Bragança's project. Without his innovative approach and dedication to creating a unique web experience, this site wouldn't have been possible. You can find the original project here: https://github.com/luisbraganca/fake-terminal-website\n\nAs for the content of the other '.txt' files you've been reading, let's give credit where it's due. A huge thanks to the unholy trinity of Gemini, Claude, and ChatGPT. Being the efficiency enthusiast (read: lazy) that I am, I tasked these fine AI with crafting the text you see here. Maybe those teachers who saw the AI apocalypse coming were onto something... :)",
+	"acknowledgements.txt": "This website's terminal-like interface was inspired by and built upon the foundational work of Luis Bragança's project. Without his innovative approach and dedication to creating a unique web experience, this site wouldn't have been possible. You can find the original project here: https://github.com/luisbraganca/fake-terminal-website\n\nAs for the content of the '.txt' files you've been reading, let's give credit where it's due. A huge thanks to the unholy trinity of Gemini, Claude, and ChatGPT. Being the efficiency enthusiast (read: lazy) that I am, I tasked these fine AI with crafting the text you see here. Maybe those teachers who saw the AI apocalypse coming were onto something... :)",
   };
   return {
     getInstance: function (options) {
