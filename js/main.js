@@ -1,73 +1,50 @@
 "use strict";
 
-function showMobileFriendlyMessage() {
+function showMobileWarning() {
   window.addEventListener("DOMContentLoaded", () => {
-    const messageContainer = document.createElement("div");
-    messageContainer.innerHTML = `
-      <div class="mobile-message-container">
-        <h2>Welcome!</h2>
-        <p>This website offers a unique terminal-like experience, best viewed on a desktop. However, you can still explore it on your mobile device.</p>
-        <button id="continueButton">Continue</button>
+    const newBody = document.createElement("body");
+
+    newBody.innerHTML = `
+      <div class="warning-container">
+        <h2>This website is not optimized for mobile devices.</h2>
+        <p>Please access it using a desktop computer for the intended experience.</p>
       </div>
     `;
-    messageContainer.classList.add("mobile-message");
-    document.body.appendChild(messageContainer);
 
-    const continueButton = document.getElementById("continueButton");
-    continueButton.addEventListener("click", () => {
-      document.body.removeChild(messageContainer);
-      // Initialize the terminal experience for mobile users
-      main.listener();
-    });
+    newBody.classList.add("warning-body");
 
-    const style = document.createElement("style");
-    style.innerHTML = `
-      .mobile-message {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        z-index: 1000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
+    document.documentElement.replaceChild(newBody, document.body);
 
-      .mobile-message-container {
-        background-color: #000;
-        color: #0f0;
-        font-family: monospace;
-        text-align: center;
-        padding: 20px;
-        border: 2px solid #0f0;
-        border-radius: 5px;
-        max-width: 80%;
-      }
-
-      .mobile-message-container button {
-        background-color: #0f0;
-        color: #000;
-        border: none;
-        padding: 10px 20px;
-        font-family: monospace;
-        cursor: pointer;
-        border-radius: 5px;
-        margin-top: 10px;
-      }
-    `;
-    document.head.appendChild(style);
+    const scripts = document.querySelectorAll("script");
+    scripts.forEach(script => script.remove());
   });
 }
 
-// Check for mobile devices and show a friendly message instead of a warning
 if (/Mobi|Android/i.test(navigator.userAgent)) {
-  showMobileFriendlyMessage();
-} else {
-  // Directly initialize for desktop users
-  window.onload = main.listener;
+  showMobileWarning();
 }
+
+const style = document.createElement("style");
+style.innerHTML = `
+  .warning-body {
+    background-color: #000;
+    color: #0f0;
+    font-family: monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .warning-container {
+    text-align: center;
+    padding: 20px;
+    border: 2px solid #0f0;
+    border-radius: 5px;
+  }
+`;
+document.head.appendChild(style);
 
 var configs = (function () {
   var instance;
@@ -655,3 +632,5 @@ var main = (function () {
     }
   };
 })();
+
+window.onload = main.listener;
