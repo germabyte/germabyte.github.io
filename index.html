@@ -1,33 +1,543 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal</title>
-    <link rel="icon" href="./img/favicon.png" type="image/x-icon" />
-    <link href="./css/main.css" rel="stylesheet" type="text/css" />
-    <script src="./js/polyfills.js"></script>
-    <script src="./js/main.js"></script>
+  <meta charset="UTF-8">
+  <title>Terminal Interface</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    /* --- Enhanced Theme Variables - High Contrast Terminal --- */
+    :root {
+      /* Core Palette */
+      --bg-color: #0d0d0d; /* Near black for deep contrast */
+      --text-color: #e0e0e0; /* Bright grey/off-white */
+      --input-bg-color: #1a1a1a; /* Slightly lighter dark grey */
+      --border-color: #383838; /* Subtle border */
+
+      /* Accent Palette (Bright Terminal Colors) */
+      --prompt-color: #33ff00; /* Bright Green */
+      --assistant-color: #00ccff; /* Bright Cyan/Blue */
+      --system-color: #5f9ea0; /* Cadet Blue (Slightly softer system info) */
+      --error-color: #ff4136; /* Bright Red */
+      --link-color: var(--assistant-color); /* Links use the assistant color for consistency */
+      --highlight-color: #ffff00; /* Bright Yellow (e.g., for selection, potential future use) */
+      --scrollbar-thumb-color: #555;
+      --scrollbar-track-color: var(--input-bg-color);
+
+      /* Typography */
+      --font-family: 'SF Mono', Monaco, Consolas, 'Ubuntu Mono', monospace; /* Prioritize modern monospace */
+      --font-size-base: 16px; /* Base size for desktop */
+      --font-size-mobile: 15px; /* Slightly smaller for mobile */
+      --line-height: 1.6; /* Increased for readability */
+
+      /* Spacing */
+      --padding-base: 15px;
+      --padding-mobile: 10px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box; /* Better box model */
+    }
+
+    html {
+      font-size: var(--font-size-base); /* Set base font size on html */
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-family);
+      margin: 0;
+      padding: 0; /* Remove default body padding */
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh; /* Dynamic viewport height for mobile browsers */
+      overflow: hidden; /* Prevent body scrolling */
+    }
+
+    /* Use semantic main element for terminal output */
+    main#terminal {
+      flex-grow: 1;
+      padding: var(--padding-base);
+      overflow-y: auto;
+      /* Keep text wrapping */
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      line-height: var(--line-height); /* Apply line-height here */
+    }
+
+    /* --- Custom Scrollbar --- */
+    main#terminal::-webkit-scrollbar {
+      width: 10px;
+    }
+    main#terminal::-webkit-scrollbar-track {
+      background: var(--scrollbar-track-color);
+    }
+    main#terminal::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb-color);
+      border-radius: 5px;
+      border: 2px solid var(--scrollbar-track-color);
+    }
+    main#terminal::-webkit-scrollbar-thumb:hover {
+      background-color: #777;
+    }
+    /* Firefox scrollbar */
+    main#terminal {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
+    }
+
+
+    /* Use semantic footer element for input area */
+    footer#inputArea {
+      display: flex;
+      align-items: stretch; /* Align items vertically */
+      background-color: var(--input-bg-color);
+      padding: calc(var(--padding-base) / 2) var(--padding-base);
+      border-top: 1px solid var(--border-color);
+      flex-shrink: 0; /* Prevent input area from shrinking */
+    }
+
+    /* --- Message Styling --- */
+    .message {
+      margin-bottom: calc(var(--padding-base) * 0.75); /* Consistent spacing between messages */
+      display: flex; /* Use flex for prefix alignment */
+      flex-direction: row;
+      align-items: baseline; /* Align text baselines */
+    }
+
+    .prefix {
+      font-weight: bold;
+      flex-shrink: 0; /* Prevent prefix from shrinking */
+      margin-right: 0.75em; /* Space between prefix and content */
+      user-select: none; /* Prefixes are usually not selectable */
+    }
+
+    .content {
+       /* Takes up remaining space */
+       flex-grow: 1;
+       /* Ensure long words break within the content area */
+       word-break: break-all; /* More aggressive breaking if needed */
+    }
+
+
+    /* --- Specific Message Type Styles --- */
+    .user .prefix { color: var(--prompt-color); }
+    .user .content { color: var(--text-color); } /* User input text color */
+
+    .assistant .prefix { color: var(--assistant-color); }
+    .assistant .content { color: var(--text-color); } /* Assistant response text */
+
+    .system .prefix { color: var(--system-color); }
+    .system .content { color: var(--system-color); opacity: 0.9; } /* Slightly dimmer system text */
+
+    .error .prefix { color: var(--error-color); }
+    .error .content { color: var(--error-color); font-weight: bold; }
+
+
+    /* --- Input Prompt & Field --- */
+    #prompt {
+      color: var(--prompt-color);
+      margin-right: 0.5em; /* Space after prompt */
+      font-weight: bold;
+      line-height: var(--line-height); /* Match line height */
+      padding: calc(var(--padding-base) / 3) 0; /* Vertical padding to center cursor */
+      user-select: none;
+      align-self: center; /* Center prompt vertically */
+    }
+
+    #userInput {
+      flex-grow: 1;
+      background-color: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-color);
+      font-family: var(--font-family);
+      font-size: inherit; /* Inherit font size from body/html */
+      line-height: var(--line-height); /* Ensure consistent line height */
+      padding: calc(var(--padding-base) / 3) 0; /* Match prompt padding */
+      caret-color: var(--prompt-color); /* Green cursor */
+    }
+    #userInput::placeholder {
+        color: #666; /* Dimmer placeholder text */
+        font-style: italic;
+    }
+    #userInput:focus {
+      /* Optional: Add a subtle focus indicator if needed, but often caret is enough */
+      /* box-shadow: 0 0 0 1px var(--prompt-color); */
+    }
+    #userInput:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+
+    /* --- Loading Indicator --- */
+    /* Simple blinking block cursor */
+    .loading .content::after {
+        content: '▋'; /* Solid block character */
+        display: inline-block;
+        animation: blink 1s step-end infinite;
+        margin-left: 0.25em;
+        color: var(--assistant-color); /* Use assistant color for loading */
+        position: relative; /* Adjust vertical position if needed */
+        top: 0.1em;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* --- Link Styling (Consistent with Assistant Color) --- */
+    .assistant a.ai-link {
+        color: var(--link-color);
+        font-weight: bold;
+        text-decoration: underline;
+        text-decoration-style: solid; /* Ensure solid underline */
+        text-decoration-color: var(--link-color); /* Match link color */
+        cursor: pointer;
+    }
+    .assistant a.ai-link:hover,
+    .assistant a.ai-link:focus {
+        text-decoration-style: double; /* Or dashed/dotted */
+        filter: brightness(1.2); /* Slightly brighter on hover */
+    }
+
+    /* --- Mobile Responsiveness --- */
+    @media (max-width: 600px) {
+      html {
+        font-size: var(--font-size-mobile); /* Use mobile font size */
+      }
+      main#terminal {
+        padding: var(--padding-mobile);
+      }
+      footer#inputArea {
+        padding: calc(var(--padding-mobile) / 1.5) var(--padding-mobile);
+      }
+      #prompt {
+         padding: calc(var(--padding-mobile) / 2) 0;
+      }
+       #userInput {
+         padding: calc(var(--padding-mobile) / 2) 0;
+      }
+      .message {
+        margin-bottom: calc(var(--padding-mobile) * 1); /* Adjust message spacing */
+      }
+      main#terminal::-webkit-scrollbar {
+         width: 6px; /* Thinner scrollbar on mobile */
+      }
+       main#terminal::-webkit-scrollbar-thumb {
+         border-width: 1px;
+       }
+    }
+
+  </style>
 </head>
-
 <body>
-    <div id="sidenav">
-        <button id="sidenavBtn">&#9776;</button>
-        <img id="profilePic" alt="An avatar that aims to represent the website owner" src="./img/avatar.png" style="display: none;">
-    </div>
-    <div id="container">
-        <div id="output"></div>
-        <div id="input-line" class="input-line">
-            <div id="prompt" class="prompt-color"></div>&nbsp;
-            <div>
-                <input type="text" id="cmdline" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus/>
-            </div>
-        </div>
-    </div>
-    <a id="githubImg" target="_blank" href="https://github.com/luisbraganca/fake-terminal-website/" style="display: none;">
-        <img alt="Fork me on GitHub" src="./img/github_ribbon.png"> 
-    </a>
-</body>
+  <!-- Use main element for semantic structure -->
+  <main id="terminal"></main>
 
+  <!-- Use footer element for semantic structure -->
+  <footer id="inputArea">
+    <span id="prompt">></span>
+    <input type="text" id="userInput" placeholder="Type command or message..." autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  </footer>
+
+  <!-- Introduction Text Block (Hidden from view, used by JS) -->
+  <script id="introductionText" type="text/plain" style="display: none;">
+Welcome! You've reached the interactive terminal interface for Germano Riccio (or at least, a reasonably efficient AI facsimile thereof).
+
+Let's see if we can streamline this conversation... what's on your mind?
+Type 'help' for a list of commands.
+  </script>
+
+  <script>
+    // --- Configuration ---
+    const PROXY_URL = "https://lucky-paper-1f4b.germ-riccio-9f0.workers.dev/";
+
+    // --- State ---
+    let conversation = [];
+    let commandHistory = [];
+    let historyIndex = -1;
+    let isWaiting = false;
+
+    // --- DOM Elements ---
+    const terminalDiv = document.getElementById("terminal");
+    const userInput = document.getElementById("userInput");
+    const inputAreaDiv = document.getElementById("inputArea"); // Keep reference if needed for styles
+
+    // --- Functions ---
+
+    // Scrolls the terminal to the bottom
+    function scrollToBottom() {
+        // Use requestAnimationFrame for smoother scrolling, especially during rapid updates
+        requestAnimationFrame(() => {
+            terminalDiv.scrollTo({ top: terminalDiv.scrollHeight, behavior: 'smooth' });
+        });
+    }
+
+    // Process text for links (no changes needed here, but kept for context)
+    function linkify(text) {
+        const urlRegex = /((?:https?:\/\/|www\.)[^\s"'<>`()]+)/g;
+        return text.replace(urlRegex, (match) => {
+            let url = match;
+            let displayUrl = match;
+            let trailingPunctuation = "";
+            const punctuationEndRegex = /[.,!?;:]*$/;
+            const punctuationMatch = url.match(punctuationEndRegex);
+            const possibleTrailing = punctuationMatch ? punctuationMatch[0] : '';
+            const coreUrl = url.substring(0, url.length - possibleTrailing.length);
+            if (possibleTrailing && coreUrl.length > 0 && !coreUrl.endsWith('.') ) {
+               url = coreUrl;
+               trailingPunctuation = possibleTrailing;
+            }
+             if (url.endsWith(')')) {
+                 if (!url.includes('(')) {
+                     url = url.slice(0, -1);
+                     trailingPunctuation = ')' + trailingPunctuation;
+                 }
+             }
+            let href = url.startsWith('www.') ? 'https://' + url : url;
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="ai-link">${url}</a>${trailingPunctuation}`;
+        });
+    }
+
+    // *** MODIFIED: Appends a message with consistent prefix/content structure ***
+    function appendMessage(role, text, isLoading = false) {
+        const msgDiv = document.createElement("div");
+        msgDiv.classList.add("message", role);
+
+        const prefixSpan = document.createElement("span");
+        prefixSpan.classList.add("prefix");
+
+        const contentSpan = document.createElement("span");
+        contentSpan.classList.add("content");
+
+        switch(role) {
+            case 'user':
+                prefixSpan.textContent = ">";
+                contentSpan.textContent = text; // User text is plain
+                break;
+            case 'assistant':
+                prefixSpan.textContent = "AI:"; // Or "SYS:", "BOT:" etc.
+                if (isLoading) {
+                    contentSpan.textContent = text; // Initial "Thinking..." text
+                    msgDiv.classList.add("loading");
+                } else {
+                    // Process final reply for links *before* assigning to innerHTML
+                    contentSpan.innerHTML = linkify(text);
+                }
+                break;
+            case 'system':
+                prefixSpan.textContent = "SYS:";
+                contentSpan.textContent = text;
+                break;
+            case 'error':
+                prefixSpan.textContent = "ERR!";
+                contentSpan.textContent = text;
+                break;
+            default: // Fallback for unknown roles
+                prefixSpan.textContent = "???:";
+                contentSpan.textContent = text;
+        }
+
+        msgDiv.appendChild(prefixSpan);
+        msgDiv.appendChild(contentSpan);
+        terminalDiv.appendChild(msgDiv);
+
+        // Only scroll immediately if it's not a loading message being updated
+        // Otherwise, scroll is handled when content arrives
+        if (!isLoading && role !== 'assistant') { // Avoid double scroll on assistant final reply
+           scrollToBottom();
+        } else if (role === 'assistant' && isLoading) {
+            scrollToBottom(); // Scroll when "Thinking..." appears
+        }
+
+
+        return msgDiv; // Return the whole message div
+    }
+
+    // Calls the AI API (no changes needed here)
+    async function askClaudeApi() {
+        const payload = { max_tokens: 2048, messages: conversation };
+        try {
+            const response = await fetch(PROXY_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const errorBody = await response.text();
+                console.error("API Error Response:", errorBody);
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            if (data.content && Array.isArray(data.content)) {
+                return data.content.filter(item => item.type === "text").map(item => item.text).join("");
+            } else if (data.completion) {
+                return data.completion;
+            } else {
+                console.error("Unexpected API response structure:", data);
+                throw new Error("Received an unexpected response format from the API.");
+            }
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            throw error instanceof TypeError ? new Error("Network error. Could not reach the API proxy.") : error;
+        }
+    }
+
+    // *** MODIFIED: Handles user input submission & updates loading message content ***
+    async function handleUserInput() {
+        if (isWaiting) return;
+
+        const inputText = userInput.value.trim();
+        if (inputText === "") return;
+
+        // Update command history
+        if (commandHistory.length === 0 || commandHistory[commandHistory.length - 1] !== inputText) {
+            commandHistory.push(inputText);
+        }
+        historyIndex = commandHistory.length; // Reset history index pointer
+
+        userInput.value = ""; // Clear input field immediately
+
+        // --- Client-Side Commands ---
+        if (inputText.toLowerCase() === 'clear') {
+            terminalDiv.innerHTML = ''; // Clear terminal output
+            initializeTerminalMessages(); // Re-add initial system messages
+            conversation = []; // Optionally clear conversation history if `clear` should reset state
+            return;
+        }
+
+        if (inputText.toLowerCase() === 'exit') {
+            appendMessage("user", inputText);
+            appendMessage("system", "Terminal connection closed. Refresh to restart.");
+            setLoadingState(true); // Disable input permanently
+            userInput.placeholder = "Terminal closed.";
+            inputAreaDiv.style.opacity = "0.7"; // Visually indicate disabled state
+            return;
+        }
+
+        if (inputText.toLowerCase() === 'help') {
+             appendMessage("user", inputText);
+             appendMessage("system", "Available commands:\n  clear - Clears the terminal screen.\n  exit  - Closes the terminal input.\n  help  - Shows this help message.\nAny other text is sent to the AI.");
+             return;
+        }
+
+        // --- Send to AI ---
+        appendMessage("user", inputText);
+        conversation.push({ role: "user", content: inputText });
+        scrollToBottom(); // Scroll user message into view
+
+        setLoadingState(true);
+        const loadingMsgDiv = appendMessage("assistant", "Thinking...", true); // Get the message div
+
+        try {
+            const rawReply = await askClaudeApi();
+
+            // *** Update the existing loading message div ***
+            loadingMsgDiv.classList.remove("loading");
+            const contentSpan = loadingMsgDiv.querySelector('.content');
+            if (contentSpan) {
+                contentSpan.innerHTML = linkify(rawReply); // Update content with linked reply
+            } else {
+                // Fallback if structure is unexpected (shouldn't happen)
+                loadingMsgDiv.remove();
+                appendMessage("assistant", rawReply);
+            }
+
+            scrollToBottom(); // Ensure the full reply is visible
+
+            conversation.push({ role: "assistant", content: rawReply }); // Store raw reply
+
+        } catch (error) {
+            if (loadingMsgDiv) {
+                loadingMsgDiv.remove(); // Remove "Thinking..." message on error
+            }
+            appendMessage("error", error.message);
+            scrollToBottom();
+        } finally {
+            // Re-enable input unless 'exit' was called (handled separately)
+            if (userInput.placeholder !== "Terminal closed.") {
+                 setLoadingState(false);
+            }
+        }
+    }
+
+
+    // Toggles the loading state
+    function setLoadingState(isLoading) {
+        isWaiting = isLoading;
+        userInput.disabled = isLoading;
+        if (!isLoading) {
+           // Use timeout to ensure focus happens after potential DOM updates/reflows
+           setTimeout(() => userInput.focus(), 0);
+        }
+    }
+
+    // Handles keyboard events (Arrow keys for history, Enter for submit)
+    function handleKeyDown(event) {
+        if (event.key === "Enter" && !event.shiftKey && !isWaiting) {
+            event.preventDefault();
+            handleUserInput();
+        } else if (event.key === "ArrowUp") {
+            if (commandHistory.length > 0 && historyIndex > 0) {
+                event.preventDefault();
+                historyIndex--;
+                userInput.value = commandHistory[historyIndex];
+                userInput.setSelectionRange(userInput.value.length, userInput.value.length); // Move cursor to end
+            }
+        } else if (event.key === "ArrowDown") {
+            if (historyIndex < commandHistory.length - 1) {
+                event.preventDefault();
+                historyIndex++;
+                userInput.value = commandHistory[historyIndex];
+                userInput.setSelectionRange(userInput.value.length, userInput.value.length); // Move cursor to end
+            } else if (historyIndex === commandHistory.length - 1) {
+                // If at the newest history item, pressing down clears the input
+                event.preventDefault();
+                historyIndex++;
+                userInput.value = "";
+            }
+        }
+         // Prevent page scroll on spacebar when input is focused
+        if (event.key === " " && document.activeElement === userInput) {
+             // Allow space within input, but could potentially prevent default
+             // if spacebar was causing unwanted page scrolls (usually not an issue here)
+        }
+    }
+
+    // Function to display initial messages
+    function initializeTerminalMessages() {
+        appendMessage("system", `=== Terminal Initialized ${new Date().toLocaleString()} ===`);
+        const introElement = document.getElementById("introductionText");
+        if (introElement) {
+            const introText = introElement.textContent.trim();
+            if (introText) {
+                // Split intro text into paragraphs if needed, or display as one block
+                appendMessage("system", introText);
+            }
+        }
+         // Initial scroll needed if messages cause overflow
+        scrollToBottom();
+    }
+
+    // --- Event Listeners ---
+    userInput.addEventListener("keydown", handleKeyDown);
+    // Optional: Refocus input if user clicks outside it in the terminal area
+    terminalDiv.addEventListener('click', (event) => {
+        // Avoid refocusing if text is selected or a link is clicked
+        if (window.getSelection().toString() === '' && event.target.tagName !== 'A') {
+           userInput.focus();
+        }
+    });
+
+
+    // --- Initialization ---
+    initializeTerminalMessages();
+    setLoadingState(false); // Ensure input is enabled initially
+
+  </script>
+</body>
 </html>
