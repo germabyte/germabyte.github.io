@@ -62,7 +62,9 @@
       overflow-y: auto;
       /* Keep text wrapping */
       white-space: pre-wrap;
-      word-wrap: break-word;
+      /* MODIFIED: Use standard overflow-wrap instead of older word-wrap */
+      /* This allows long words to break ONLY if they would overflow */
+      overflow-wrap: break-word;
       line-height: var(--line-height); /* Apply line-height here */
     }
 
@@ -116,8 +118,8 @@
     .content {
        /* Takes up remaining space */
        flex-grow: 1;
-       /* Ensure long words break within the content area */
-       word-break: break-all; /* More aggressive breaking if needed */
+       /* REMOVED: word-break: break-all; <-- This was causing ugly mid-word breaks */
+       /* Rely on overflow-wrap: break-word on the parent (#terminal) instead */
     }
 
 
@@ -303,7 +305,7 @@ Type 'help' for a list of commands.
         });
     }
 
-    // *** MODIFIED: Appends a message with consistent prefix/content structure ***
+    // *** Appends a message with consistent prefix/content structure ***
     function appendMessage(role, text, isLoading = false) {
         const msgDiv = document.createElement("div");
         msgDiv.classList.add("message", role);
@@ -387,7 +389,7 @@ Type 'help' for a list of commands.
         }
     }
 
-    // *** MODIFIED: Handles user input submission & updates loading message content ***
+    // *** Handles user input submission & updates loading message content ***
     async function handleUserInput() {
         if (isWaiting) return;
 
