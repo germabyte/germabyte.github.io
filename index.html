@@ -100,6 +100,22 @@
       flex-shrink: 0; /* Prevent input area from shrinking */
     }
 
+    /* --- Token Counter Bubble --- */
+    /* This bubble sits right above the command line at the bottom right */
+    #tokenCounter {
+      position: fixed;
+      bottom: 70px; /* Adjusted so it's above the input area */
+      right: 20px;
+      background-color: var(--input-bg-color);
+      color: var(--text-color);
+      padding: 5px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      z-index: 1000;
+      font-family: var(--font-family);
+      font-size: 14px;
+    }
+
     /* --- Message Styling --- */
     .message {
       margin-bottom: calc(var(--padding-base) * 0.75); /* Consistent spacing between messages */
@@ -240,6 +256,9 @@
   <!-- Use main element for semantic structure -->
   <main id="terminal"></main>
 
+  <!-- --- Token Counter Bubble --- -->
+  <div id="tokenCounter">Tokens: 0/500</div>
+
   <!-- Use footer element for semantic structure -->
   <footer id="inputArea">
     <!-- This ">" prompt remains unchanged -->
@@ -258,6 +277,7 @@ Type 'help' for a list of commands.
   <script>
     // --- Configuration ---
     const PROXY_URL = "https://lucky-paper-1f4b.germ-riccio-9f0.workers.dev/";
+    const TOKEN_LIMIT = 500;
 
     // --- State ---
     let conversation = [];
@@ -268,7 +288,31 @@ Type 'help' for a list of commands.
     // --- DOM Elements ---
     const terminalDiv = document.getElementById("terminal");
     const userInput = document.getElementById("userInput");
-    const inputAreaDiv = document.getElementById("inputArea"); // Keep reference if needed for styles
+    const inputAreaDiv = document.getElementById("inputArea");
+    const tokenCounterDiv = document.getElementById("tokenCounter");
+
+    // --- Token Counting Functions ---
+    function countTokens(text) {
+      // A naive approximation: assume one token per 4 characters.
+      return Math.ceil(text.length / 4);
+    }
+
+    function updateTokenCounter() {
+      let totalTokens = 0;
+      // Sum tokens from all conversation messages.
+      conversation.forEach(msg => {
+        totalTokens += countTokens(msg.content);
+      });
+      tokenCounterDiv.textContent = `Tokens: ${totalTokens}/${TOKEN_LIMIT}`;
+
+      // If tokens exceed or equal our limit, auto-exit.
+      if(totalTokens >= TOKEN_LIMIT) {
+        appendMessage("system", "Token limit reached. Terminal connection closed to prevent memory issues. Please refresh to restart.");
+        setLoadingState(true);
+        userInput.disabled = true;
+        userInput.placeholder = "Terminal closed.";
+      }
+    }
 
     // --- Functions ---
 
@@ -282,7 +326,7 @@ Type 'help' for a list of commands.
 
     // Process text for links (no changes needed here, but kept for context)
     function linkify(text) {
-        const urlRegex = /((?:https?:\/\/|www\.)[^\s"'<>`()]+)/g;
+        const urlRegex = /((?:https?:\/\/|www\.)[^\s"'<>()`]+)/g;
         return text.replace(urlRegex, (match) => {
             let url = match;
             let displayUrl = match;
@@ -358,7 +402,6 @@ Type 'help' for a list of commands.
             scrollToBottom(); // Scroll when "Thinking..." appears
         }
 
-
         return msgDiv; // Return the whole message div
     }
 
@@ -411,6 +454,7 @@ Type 'help' for a list of commands.
             terminalDiv.innerHTML = ''; // Clear terminal output
             initializeTerminalMessages(); // Re-add initial system messages
             conversation = []; // Optionally clear conversation history if `clear` should reset state
+            updateTokenCounter();
             return;
         }
 
@@ -420,7 +464,6 @@ Type 'help' for a list of commands.
             appendMessage("system", "Terminal connection closed. Refresh to restart.");
             setLoadingState(true); // Disable input permanently
             userInput.placeholder = "Terminal closed.";
-            inputAreaDiv.style.opacity = "0.7"; // Visually indicate disabled state
             return;
         }
 
@@ -435,6 +478,7 @@ Type 'help' for a list of commands.
         // Use the modified appendMessage - this will now show USER: followed by the input
         appendMessage("user", inputText);
         conversation.push({ role: "user", content: inputText });
+        updateTokenCounter();
         scrollToBottom(); // Scroll user message into view
 
         setLoadingState(true);
@@ -457,6 +501,7 @@ Type 'help' for a list of commands.
             scrollToBottom(); // Ensure the full reply is visible
 
             conversation.push({ role: "assistant", content: rawReply }); // Store raw reply
+            updateTokenCounter();
 
         } catch (error) {
             if (loadingMsgDiv) {
@@ -471,7 +516,6 @@ Type 'help' for a list of commands.
             }
         }
     }
-
 
     // Toggles the loading state
     function setLoadingState(isLoading) {
@@ -539,7 +583,6 @@ Type 'help' for a list of commands.
            userInput.focus();
         }
     });
-
 
     // --- Initialization ---
     initializeTerminalMessages();
