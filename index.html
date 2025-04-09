@@ -124,7 +124,7 @@
 
 
     /* --- Specific Message Type Styles --- */
-    .user .prefix { color: var(--prompt-color); }
+    .user .prefix { color: var(--prompt-color); } /* Keep user prefix green */
     .user .content { color: var(--text-color); } /* User input text color */
 
     .assistant .prefix { color: var(--assistant-color); }
@@ -138,7 +138,7 @@
 
 
     /* --- Input Prompt & Field --- */
-    #prompt {
+    #prompt { /* This styles the > in the input area */
       color: var(--prompt-color);
       margin-right: 0.5em; /* Space after prompt */
       font-weight: bold;
@@ -242,6 +242,7 @@
 
   <!-- Use footer element for semantic structure -->
   <footer id="inputArea">
+    <!-- This ">" prompt remains unchanged -->
     <span id="prompt">></span>
     <input type="text" id="userInput" placeholder="Type command or message..." autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </footer>
@@ -318,7 +319,8 @@ Type 'help' for a list of commands.
 
         switch(role) {
             case 'user':
-                prefixSpan.textContent = ">";
+                // *** MODIFIED: Changed prefix text for user messages ***
+                prefixSpan.textContent = "USER:";
                 contentSpan.textContent = text; // User text is plain
                 break;
             case 'assistant':
@@ -413,6 +415,7 @@ Type 'help' for a list of commands.
         }
 
         if (inputText.toLowerCase() === 'exit') {
+            // Use the modified appendMessage - this will now show USER: exit
             appendMessage("user", inputText);
             appendMessage("system", "Terminal connection closed. Refresh to restart.");
             setLoadingState(true); // Disable input permanently
@@ -422,12 +425,14 @@ Type 'help' for a list of commands.
         }
 
         if (inputText.toLowerCase() === 'help') {
+             // Use the modified appendMessage - this will now show USER: help
              appendMessage("user", inputText);
              appendMessage("system", "Available commands:\n  clear - Clears the terminal screen.\n  exit  - Closes the terminal input.\n  help  - Shows this help message.\nAny other text is sent to the AI.");
              return;
         }
 
         // --- Send to AI ---
+        // Use the modified appendMessage - this will now show USER: followed by the input
         appendMessage("user", inputText);
         conversation.push({ role: "user", content: inputText });
         scrollToBottom(); // Scroll user message into view
