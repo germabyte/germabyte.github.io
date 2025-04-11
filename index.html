@@ -405,9 +405,10 @@ Type 'help' for a list of commands.
         return msgDiv; // Return the whole message div
     }
 
-    // Calls the AI API (no changes needed here)
-    async function askClaudeApi() {
-        const payload = { max_tokens: 2048, messages: conversation };
+    // Calls the AI API (renamed from askClaudeApi)
+    async function askAiApi() {
+        // Updated max_tokens to support a larger context length.
+        const payload = { max_tokens: 50000, messages: conversation };
         try {
             const response = await fetch(PROXY_URL, {
                 method: "POST",
@@ -485,7 +486,7 @@ Type 'help' for a list of commands.
         const loadingMsgDiv = appendMessage("assistant", "Thinking...", true); // Get the message div
 
         try {
-            const rawReply = await askClaudeApi();
+            const rawReply = await askAiApi();
 
             // *** Update the existing loading message div ***
             loadingMsgDiv.classList.remove("loading");
