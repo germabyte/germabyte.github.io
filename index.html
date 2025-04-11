@@ -257,6 +257,15 @@ Type 'help' for a list of commands.
     const userInput = document.getElementById("userInput");
     const tokenCounterDiv = document.getElementById("tokenCounter");
 
+    // Helper to format token counts (approximate, in "k" when above 1000)
+    function formatTokenCount(num) {
+      if (num < 1000) {
+        return num;
+      } else {
+        return Math.round(num / 1000) + "k";
+      }
+    }
+
     // Process text for links
     function linkify(text) {
       const urlRegex = /((?:https?:\/\/|www\.)[^\s"'<>()`]+)/g;
@@ -346,7 +355,7 @@ Type 'help' for a list of commands.
                 throw new Error(`API request failed: ${response.status} ${response.statusText}`);
             }
             const data = await response.json();
-            // Expecting response with structure: { completion: "...", tokenCount: <number> }
+            // Expecting response with structure: { completion: "...", tokenCount: <number>, tokenLimit: <number> }
             if (data.completion) {
                 return data;
             } else {
@@ -401,6 +410,7 @@ Type 'help' for a list of commands.
             const result = await askAiApi();
             const rawReply = result.completion;
             const tokensUsed = result.tokenCount;
+            const tokenLimit = result.tokenLimit;
             loadingMsgDiv.classList.remove("loading");
             const contentSpan = loadingMsgDiv.querySelector('.content');
             if (contentSpan) {
@@ -411,8 +421,8 @@ Type 'help' for a list of commands.
             }
             scrollToBottom();
             conversation.push({ role: "assistant", content: rawReply });
-            // Update token counter from worker result:
-            tokenCounterDiv.textContent = `Tokens: ${tokensUsed}`;
+            // Update token counter from worker result using formatted tokens:
+            tokenCounterDiv.textContent = `Tokens: ${formatTokenCount(tokensUsed)}/${formatTokenCount(tokenLimit)}`;
         } catch (error) {
             if (loadingMsgDiv) loadingMsgDiv.remove();
             appendMessage("error", error.message);
